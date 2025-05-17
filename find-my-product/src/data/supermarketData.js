@@ -1,5 +1,5 @@
 export const supermarkets = {
-    "supermarket-123": {
+    "s-01": {
       name: "Fresh Mart",
       type: "Supermarket",
       products: [
@@ -12,8 +12,8 @@ export const supermarkets = {
         { name: "Orange Juice", row: "B4", category: "Beverages" },
       ],
     },
-    "supermarket-456": {
-      name: "City Grocers",
+    "s-02": {
+      name: "sulabha",
       type: "Supermarket",
       products: [
         { name: "Apple", row: "A2", category: "Fruits" },
@@ -24,8 +24,8 @@ export const supermarkets = {
         { name: "Frozen Peas", row: "F1", category: "Frozen" },
       ],
     },
-    "pharmacy-001": {
-      name: "HealthPlus Pharmacy",
+    "s-03": {
+      name: "SD medicals",
       type: "Pharmacy",
       products: [
         { name: "Paracetamol", row: "P1", category: "Medicines" },
@@ -36,8 +36,8 @@ export const supermarkets = {
         { name: "Face Masks", row: "P6", category: "Protection" },
       ],
     },
-    "bakery-101": {
-      name: "Sweet Crumbs Bakery",
+    "s-04": {
+      name: "City Bakery",
       type: "Bakery",
       products: [
         { name: "Chocolate Cake", row: "B1", category: "Cakes" },
@@ -48,7 +48,7 @@ export const supermarkets = {
         { name: "Garlic Bread", row: "B6", category: "Savories" },
       ],
     },
-    "electronics-789": {
+    "s-05": {
       name: "Tech Hub",
       type: "Electronics",
       products: [
@@ -60,8 +60,8 @@ export const supermarkets = {
         { name: "LED TV", row: "E6", category: "Home Entertainment" },
       ],
     },
-    "clothing-888": {
-      name: "Urban Style",
+    "s-06": {
+      name: "leaf",
       type: "Clothing Store",
       products: [
         { name: "Jeans", row: "C1", category: "Men's Wear" },
@@ -72,8 +72,8 @@ export const supermarkets = {
         { name: "Cap", row: "C6", category: "Accessories" },
       ],
     },
-    "bookstore-654": {
-      name: "Page Turners",
+    "s-07": {
+      name: "books",
       type: "Bookstore",
       products: [
         { name: "The Great Gatsby", row: "L1", category: "Fiction" },
@@ -83,7 +83,7 @@ export const supermarkets = {
         { name: "Children's Stories", row: "L5", category: "Kids" },
       ],
     },
-    "toystore-999": {
+    "s-08": {
       name: "Toy World",
       type: "Toy Store",
       products: [
@@ -94,7 +94,7 @@ export const supermarkets = {
         { name: "Teddy Bear", row: "T5", category: "Stuffed Toys" },
       ],
     },
-    "furniture-555": {
+    "s-09": {
       name: "Home Comfort",
       type: "Furniture Store",
       products: [
