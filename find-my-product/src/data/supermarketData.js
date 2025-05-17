@@ -1,21 +1,17 @@
-export const supermarketData = [
-    {
-      id: "123",
-      name: "SuperMart ABC",
+export const supermarkets = {
+    "supermarket-123": {
+      name: "Fresh Mart",
       products: [
-        { name: "Milk", category: "Dairy", aisle: "2" },
-        { name: "Bread", category: "Bakery", aisle: "4" },
-        { name: "Apple", category: "Fruits", aisle: "1" },
+        { name: "Tomato", row: "A1", category: "Vegetables" },
+        { name: "Milk", row: "B2", category: "Dairy" },
       ],
     },
-    {
-      id: "456",
-      name: "SuperMart XYZ",
+    "supermarket-456": {
+      name: "City Grocers",
       products: [
-        { name: "Eggs", category: "Dairy", aisle: "3" },
-        { name: "Banana", category: "Fruits", aisle: "1" },
-        { name: "Cake", category: "Bakery", aisle: "5" },
+        { name: "Apple", row: "A2", category: "Fruits" },
+        { name: "Cheese", row: "C1", category: "Dairy" },
       ],
     },
-  ];
+  };
   

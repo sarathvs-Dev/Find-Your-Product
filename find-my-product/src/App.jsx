@@ -1,71 +1,116 @@
-import React, { useState, useEffect } from "react";
-import SearchBar from "./components/SearchBar";
-import ProductCard from "./components/ProductCard";
-import CategoryList from "./components/CategoryList";
-import AisleMap from "./components/AisleMap";
-import QRScanner from "./components/QRScanner";
-import { supermarketData } from "./data/supermarketData"; // Mock data source
+import React, { useState } from "react";
+import { Html5QrcodeScanner } from "html5-qrcode";
+import { supermarkets } from "./data/supermarketData";
+
+const QRScanner = ({ onResult }) => {
+  React.useEffect(() => {
+    const scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+    scanner.render(
+      (decodedText) => {
+        onResult(decodedText.trim());
+        scanner.clear();
+      },
+      (error) => {}
+    );
+    return () => {
+      scanner.clear();
+    };
+  }, [onResult]);
+
+  return <div id="qr-reader" style={{ width: "300px", margin: "auto" }} />;
+};
 
 const App = () => {
-  const [supermarketId, setSupermarketId] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [highlightedAisle, setHighlightedAisle] = useState(null);
+  const [storeData, setStoreData] = useState(null);
+  const [scannedId, setScannedId] = useState("");
+  const [inputId, setInputId] = useState("");
+  const [error, setError] = useState("");
 
-  const handleQRScan = (data) => {
-    // Example QR format: "supermarket:123"
-    const id = data.replace("supermarket:", "").trim();
-    const matchedData = supermarketData.find((market) => market.id === id);
-    if (matchedData) {
-      setSupermarketId(id);
-      setProducts(matchedData.products);
-      setFiltered(matchedData.products);
+  const handleQRResult = (text) => {
+    setScannedId(text);
+    setInputId(text); // sync input field too
+    findSupermarket(text);
+  };
+
+  const findSupermarket = (id) => {
+    setError("");
+    const data = supermarkets[id];
+    if (data) {
+      setStoreData(data);
     } else {
-      alert("Invalid or unknown supermarket QR code.");
+      setStoreData(null);
+      setError("Supermarket not found");
     }
   };
 
-  const handleSearch = (query) => {
-    const result = products.filter((p) =>
-      p.name.toLowerCase().includes(query.toLowerCase())
-    );
-    setFiltered(result);
+  const handleInputSearch = () => {
+    const trimmedId = inputId.trim();
+    setScannedId(trimmedId);
+    findSupermarket(trimmedId);
   };
-
-  const handleCategorySelect = (category) => {
-    const result = products.filter((p) => p.category === category);
-    setFiltered(result);
-  };
-
-  useEffect(() => {
-    if (filtered.length === 1) {
-      setHighlightedAisle(filtered[0].aisle);
-    } else {
-      setHighlightedAisle(null);
-    }
-  }, [filtered]);
-
-  // Show scanner first if no supermarket is loaded
-  if (!supermarketId) {
-    return <QRScanner onScanSuccess={handleQRScan} />;
-  }
 
   return (
-    <div className="min-h-screen bg-gray-100 text-center">
-      <h1 className="text-3xl font-bold py-6">Supermarket Product Locator</h1>
-      <SearchBar onSearch={handleSearch} />
-      <CategoryList products={products} onSelect={handleCategorySelect} />
-      <AisleMap highlightedAisle={highlightedAisle} />
+    <div className="min-h-screen bg-gray-50 p-6 text-center">
+      <h1 className="text-3xl font-bold mb-6">Find My Product</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-        {filtered.length > 0 ? (
-          filtered.map((product, index) => (
-            <ProductCard key={index} product={product} />
-          ))
-        ) : (
-          <p className="col-span-full text-red-500">No products found.</p>
-        )}
-      </div>
+      {!storeData && (
+        <>
+          <h2 className="mb-2 font-semibold">Scan Supermarket QR Code</h2>
+          <QRScanner onResult={handleQRResult} />
+
+          <p className="my-4 font-semibold">OR</p>
+
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Enter Supermarket ID"
+              value={inputId}
+              onChange={(e) => setInputId(e.target.value)}
+              className="border rounded p-2 mr-2"
+            />
+            <button
+              onClick={handleInputSearch}
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Search
+            </button>
+          </div>
+
+          {error && <p className="text-red-600 font-semibold">{error}</p>}
+        </>
+      )}
+
+      {storeData && (
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Welcome to {storeData.name}</h2>
+          <p className="text-gray-600 mb-4">Supermarket ID: {scannedId}</p>
+
+          <button
+            onClick={() => {
+              setStoreData(null);
+              setScannedId("");
+              setInputId("");
+              setError("");
+            }}
+            className="mb-6 bg-gray-400 text-white px-4 py-2 rounded"
+          >
+            Reset
+          </button>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+            {storeData.products.map((p, i) => (
+              <div
+                key={i}
+                className="p-4 border rounded shadow bg-white text-left"
+              >
+                <h3 className="text-lg font-bold">{p.name}</h3>
+                <p>Category: {p.category}</p>
+                <p>Row: {p.row}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
