@@ -1,10 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { supermarkets } from "./data/supermarketData";
 
 const QRScanner = ({ onResult }) => {
   React.useEffect(() => {
-    const scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+    const scanner = new Html5QrcodeScanner("qr-reader", { 
+      fps: 10, 
+      qrbox: 250,
+      aspectRatio: 1,
+      showTorchButtonIfSupported: true
+    });
+    
     scanner.render(
       (decodedText) => {
         onResult(decodedText.trim());
@@ -12,12 +18,18 @@ const QRScanner = ({ onResult }) => {
       },
       (error) => {}
     );
+    
     return () => {
       scanner.clear();
     };
   }, [onResult]);
 
-  return <div id="qr-reader" style={{ width: "300px", margin: "auto" }} />;
+  return (
+    <div 
+      id="qr-reader" 
+      className="w-full max-w-md mx-auto rounded-xl overflow-hidden shadow-lg border-2 border-blue-500"
+    />
+  );
 };
 
 const App = () => {
@@ -25,92 +37,256 @@ const App = () => {
   const [scannedId, setScannedId] = useState("");
   const [inputId, setInputId] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
+  useEffect(() => {
+    if (storeData && searchTerm) {
+      const results = storeData.products.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(results);
+    } else if (storeData) {
+      setFilteredProducts(storeData.products);
+    }
+  }, [searchTerm, storeData]);
 
   const handleQRResult = (text) => {
     setScannedId(text);
-    setInputId(text); // sync input field too
+    setInputId(text);
     findSupermarket(text);
   };
 
   const findSupermarket = (id) => {
+    setIsLoading(true);
     setError("");
-    const data = supermarkets[id];
-    if (data) {
-      setStoreData(data);
-    } else {
-      setStoreData(null);
-      setError("Supermarket not found");
-    }
+    setSearchTerm("");
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      const data = supermarkets[id];
+      if (data) {
+        setStoreData(data);
+        setFilteredProducts(data.products);
+      } else {
+        setStoreData(null);
+        setError("Supermarket not found. Please check the ID and try again.");
+      }
+      setIsLoading(false);
+    }, 800);
   };
 
-  const handleInputSearch = () => {
+  const handleInputSearch = (e) => {
+    e.preventDefault();
     const trimmedId = inputId.trim();
     setScannedId(trimmedId);
     findSupermarket(trimmedId);
   };
 
+  const handleProductSearch = (e) => {
+    e.preventDefault();
+    // Search is handled in the useEffect
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 text-center">
-      <h1 className="text-3xl font-bold mb-6">Find My Product</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-6xl mx-auto">
+        <header className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
+            Store Product Finder
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            {storeData 
+              ? `Search products in ${storeData.name}`
+              : "Scan a supermarket QR code or enter the ID to begin"}
+          </p>
+        </header>
 
-      {!storeData && (
-        <>
-          <h2 className="mb-2 font-semibold">Scan Supermarket QR Code</h2>
-          <QRScanner onResult={handleQRResult} />
-
-          <p className="my-4 font-semibold">OR</p>
-
-          <div className="mb-6">
-            <input
-              type="text"
-              placeholder="Enter Supermarket ID"
-              value={inputId}
-              onChange={(e) => setInputId(e.target.value)}
-              className="border rounded p-2 mr-2"
-            />
-            <button
-              onClick={handleInputSearch}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Search
-            </button>
-          </div>
-
-          {error && <p className="text-red-600 font-semibold">{error}</p>}
-        </>
-      )}
-
-      {storeData && (
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Welcome to {storeData.name}</h2>
-          <p className="text-gray-600 mb-4">Supermarket ID: {scannedId}</p>
-
-          <button
-            onClick={() => {
-              setStoreData(null);
-              setScannedId("");
-              setInputId("");
-              setError("");
-            }}
-            className="mb-6 bg-gray-400 text-white px-4 py-2 rounded"
-          >
-            Reset
-          </button>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            {storeData.products.map((p, i) => (
-              <div
-                key={i}
-                className="p-4 border rounded shadow bg-white text-left"
-              >
-                <h3 className="text-lg font-bold">{p.name}</h3>
-                <p>Category: {p.category}</p>
-                <p>Row: {p.row}</p>
+        {!storeData && (
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-3xl mx-auto">
+            <div className="flex flex-col md:flex-row gap-8">
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 22V12h6v10" />
+                  </svg>
+                  Scan Supermarket QR Code
+                </h2>
+                <div className="mb-6">
+                  <QRScanner onResult={handleQRResult} />
+                </div>
               </div>
-            ))}
+
+              <div className="flex-1">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="px-2 bg-white text-sm text-gray-500">OR</span>
+                  </div>
+                </div>
+
+                <h2 className="text-xl font-semibold mb-4 text-gray-800 mt-6 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Enter Supermarket ID
+                </h2>
+                <form onSubmit={handleInputSearch} className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="e.g. SM-12345"
+                    value={inputId}
+                    onChange={(e) => setInputId(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all ${isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} shadow-md hover:shadow-lg flex items-center justify-center`}
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Searching...
+                      </>
+                    ) : (
+                      "Find Supermarket"
+                    )}
+                  </button>
+                </form>
+                {error && (
+                  <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span>{error}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {storeData && (
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-6xl mx-auto animate-fadeIn">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">Welcome to {storeData.name}</h2>
+                <p className="text-gray-600">ID: <span className="font-mono bg-gray-100 px-2 py-1 rounded">{scannedId}</span></p>
+              </div>
+              <button
+                onClick={() => {
+                  setStoreData(null);
+                  setScannedId("");
+                  setInputId("");
+                  setError("");
+                  setSearchTerm("");
+                }}
+                className="mt-4 md:mt-0 flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Scan Another Store
+              </button>
+            </div>
+
+            <div className="mb-8">
+              <form onSubmit={handleProductSearch} className="max-w-2xl mx-auto">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search products (e.g. 'milk', 'bread')"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition shadow-sm"
+                  />
+                  <div className="absolute left-3 top-3 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                {searchTerm ? "Search Results" : "All Products"}
+                <span className="ml-2 text-sm font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  {filteredProducts.length} {filteredProducts.length === 1 ? "item" : "items"}
+                </span>
+              </h3>
+              
+              {filteredProducts.length === 0 ? (
+                <div className="text-center py-12">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h4 className="mt-4 text-lg font-medium text-gray-700">No products found</h4>
+                  <p className="mt-1 text-gray-500">Try a different search term</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredProducts.map((p, i) => (
+                    <div
+                      key={i}
+                      className="p-5 border rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white group relative"
+                    >
+                      <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors mb-2 pr-6">{p.name}</h3>
+                      <div className="flex items-center text-gray-600 mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        <span>Category: {p.category}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span>Row: <span className="font-semibold">{p.row}</span></span>
+                      </div>
+                      {p.aisle && (
+                        <div className="flex items-center text-gray-600 mt-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                          </svg>
+                          <span>Aisle: <span className="font-semibold">{p.aisle}</span></span>
+                        </div>
+                      )}
+                      <div className="absolute top-4 right-4 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                        #{i+1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Add some global styles for animations */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };
