@@ -95,7 +95,7 @@ const App = () => {
       <div className="max-w-6xl mx-auto">
         <header className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
-            Store Product Finder
+            Find Your Product
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             {storeData 
