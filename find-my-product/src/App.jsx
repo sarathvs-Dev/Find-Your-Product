@@ -33,6 +33,8 @@ const QRScanner = ({ onResult }) => {
 };
 
 const App = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
   const [storeData, setStoreData] = useState(null);
   const [scannedId, setScannedId] = useState("");
   const [inputId, setInputId] = useState("");
@@ -45,9 +47,18 @@ const App = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [availableCategories, setAvailableCategories] = useState([]);
   const [isScannerActive, setIsScannerActive] = useState(false);
+  const [expandedProduct, setExpandedProduct] = useState(null);
 
   // Extract all unique categories from products
+
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+  useEffect(() => {
+    
     if (storeData && searchMode === 'store') {
       const categories = [...new Set(storeData.products.map(p => p.category))];
       setAvailableCategories(categories);
@@ -87,7 +98,8 @@ const App = () => {
         .map(product => ({
           ...product,
           storeId,
-          storeName: store.name
+          storeName: store.name,
+          storeImage: store.image
         }));
     
       if (matchingProducts.length > 0) {
@@ -135,6 +147,7 @@ const App = () => {
     setError("");
     setSearchTerm("");
     setSelectedCategory("all");
+    setExpandedProduct(null);
     
     setTimeout(() => {
       const data = supermarkets[id];
@@ -169,33 +182,58 @@ const App = () => {
     setSearchTerm('');
     setSelectedCategory('all');
     setProductSearchResults([]);
+    setExpandedProduct(null);
   };
 
   const toggleScanner = () => {
     setIsScannerActive(!isScannerActive);
   };
 
+  const toggleProductExpand = (productId) => {
+    setExpandedProduct(expandedProduct === productId ? null : productId);
+  };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Animated Header */}
-        <header className="text-center mb-6 md:mb-10 animate-fadeIn">
-          <div className="inline-flex items-center justify-center mb-3 p-2 md:p-3 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-full shadow-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6 relative">
+      {/* Splash Screen */}
+      {showSplash && (
+        <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 flex flex-col items-center justify-center z-50 animate-splashFadeOut">
+          <div className="text-center animate-splashSlideUp">
+            <div className="inline-flex items-center justify-center mb-6 p-3 bg-white/10 rounded-full shadow-lg backdrop-blur-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 md:h-16 md:w-16 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white">
+              shelf<span className="text-yellow-300">Sense</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto">
+              Find products faster, shop smarter
+            </p>
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
-            shelf<span className="text-yellow-300 ">Sense</span>
-          </h1>
-          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
-            {storeData 
-              ? `📍 ${storeData.name}`
-              : searchMode === 'product' 
-                ? " Search products across all stores"
-                : "📱 Scan a store QR code to begin"}
-          </p>
-        </header>
+        </div>
+      )}
+
+      {/* Main App Content (only shown after splash) */}
+      {!showSplash && (
+        <div className="max-w-6xl mx-auto">
+          {/* Animated Header */}
+          <header className="text-center mb-6 md:mb-10 animate-fadeIn">
+            <div className="inline-flex items-center justify-center mb-3 p-2 md:p-3 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-full shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
+              shelf<span className="text-yellow-300">Sense</span>
+            </h1>
+            <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+              {storeData 
+                ? `📍 ${storeData.name}`
+                : searchMode === 'product' 
+                  ? " Search products across all stores"
+                  : "📱 Scan a store QR code to begin"}
+            </p>
+          </header>
 
         {(!storeData || searchMode === 'product') && (
           <div className="bg-white rounded-2xl shadow-xl p-4 md:p-6 max-w-3xl mx-auto mb-6 transition-all duration-300 hover:shadow-2xl">
@@ -276,7 +314,22 @@ const App = () => {
                     <div className="grid grid-cols-1 gap-3 md:gap-4">
                       {productSearchResults.map((product, index) => (
                         <div key={index} className="p-3 md:p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-300 group">
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-start gap-2">
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="w-full sm:w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                              {product.image ? (
+                                <img 
+                                  src={product.image} 
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
                             <div className="flex-1">
                               <h4 className="font-bold text-base md:text-lg text-gray-800 group-hover:text-indigo-600 transition-colors">{product.name}</h4>
                               <p className="text-sm text-gray-600 mb-2">Category: {product.category}</p>
@@ -287,9 +340,14 @@ const App = () => {
                                 </svg>
                                 <span className="text-sm md:text-base font-medium">{product.storeName}</span>
                               </div>
-                            </div>
-                            <div className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs md:text-sm font-medium whitespace-nowrap">
-                              Aisle {product.aisle || 'N/A'}, Row {product.row}
+                              <div className="mt-2 flex justify-between items-center">
+                                <div className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs md:text-sm font-medium whitespace-nowrap">
+                                  Aisle {product.aisle || 'N/A'}, Row {product.row}
+                                </div>
+                                <div className="text-sm font-bold text-gray-700">
+                                  ${product.price?.toFixed(2) || 'N/A'}
+                                </div>
+                              </div>
                             </div>
                           </div>
                           <button 
@@ -471,59 +529,53 @@ const App = () => {
               </div>
             </div>
 
-            <div className="mb-6 md:mb-8">
-              <form onSubmit={handleProductSearch} className="max-w-2xl mx-auto">
-                <div className="relative mb-3">
-                  <input
-                    type="text"
-                    placeholder="Search products in this store (e.g. 'milk', 'bread')"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 md:pl-12 pr-4 py-2 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition shadow-sm hover:shadow-md"
-                  />
-                  <div className="absolute left-3 top-2 md:top-3 text-indigo-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            {/* Store Details Section */}
+            <div className="mb-6 md:mb-8 bg-gray-50 rounded-xl p-4 md:p-6 border border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <div className="md:col-span-2">
+                  <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                  </div>
-                  {searchTerm && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-3 top-2 md:top-3 text-gray-400 hover:text-gray-600"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    Store Information
+                  </h3>
+                  <div className="space-y-2 text-sm md:text-base text-gray-700">
+                    <p className="flex items-start">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-2 mt-0.5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                    </button>
-                  )}
+                      <span>{storeData.location}</span>
+                    </p>
+                    <p className="flex items-start">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-2 mt-0.5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      <span>{storeData.contact}</span>
+                    </p>
+                    <p className="flex items-start">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-2 mt-0.5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{storeData.hours}</span>
+                    </p>
+                    <p className="flex items-start">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-2 mt-0.5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{storeData.description}</span>
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="flex-1 px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition shadow-sm"
-                  >
-                    <option value="all">All Categories</option>
-                    {availableCategories.map((category, index) => (
-                      <option key={index} value={category}>{category}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setSelectedCategory('all');
-                    }}
-                    className="px-3 py-2 md:px-4 md:py-3 text-sm md:text-base bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center justify-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Reset
-                  </button>
+                <div className="h-48 md:h-full rounded-lg overflow-hidden shadow-md">
+                  <img 
+                    src={storeData.image} 
+                    alt={storeData.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              </form>
+              </div>
             </div>
 
             <div className="mb-6">
@@ -563,37 +615,90 @@ const App = () => {
                   {filteredProducts.map((p, i) => (
                     <div
                       key={i}
-                      className="p-3 md:p-4 border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 bg-white group relative overflow-hidden"
+                      className={`p-3 md:p-4 border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 bg-white group relative overflow-hidden ${expandedProduct === p.id ? 'ring-2 ring-indigo-500' : ''}`}
                     >
                       <div className="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-bl-lg">
                         #{i+1}
                       </div>
+                      
+                      {/* Product Image */}
+                      <div 
+                        className="w-full h-40 md:h-48 rounded-lg overflow-hidden bg-gray-100 mb-3 cursor-pointer"
+                        onClick={() => toggleProductExpand(p.id)}
+                      >
+                        {p.image ? (
+                          <img 
+                            src={p.image} 
+                            alt={p.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      
                       <h3 className="text-base md:text-lg font-bold text-gray-800 group-hover:text-indigo-600 transition-colors mb-1 pr-6">{p.name}</h3>
-                      <div className="flex items-center text-gray-600 text-xs md:text-sm mb-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                        </svg>
-                        <span>Category: {p.category}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600 text-xs md:text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                        <span>Row: <span className="font-semibold">{p.row}</span></span>
-                      </div>
-                      {p.aisle && (
-                        <div className="flex items-center text-gray-600 text-xs md:text-sm mt-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                          </svg>
-                          <span>Aisle: <span className="font-semibold">{p.aisle}</span></span>
+                      
+                      {/* Expanded Product Details */}
+                      {expandedProduct === p.id && (
+                        <div className="mt-2 space-y-2 animate-fadeIn">
+                          <div className="flex items-center text-gray-600 text-xs md:text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                            </svg>
+                            <span>Category: {p.category}</span>
+                          </div>
+                          <div className="flex items-center text-gray-600 text-xs md:text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                            <span>Row: <span className="font-semibold">{p.row}</span></span>
+                          </div>
+                          {p.aisle && (
+                            <div className="flex items-center text-gray-600 text-xs md:text-sm">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                              </svg>
+                              <span>Aisle: <span className="font-semibold">{p.aisle}</span></span>
+                            </div>
+                          )}
+                          {p.price && (
+                            <div className="flex items-center text-gray-600 text-xs md:text-sm">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span>Price: <span className="font-semibold">${p.price.toFixed(2)}</span></span>
+                            </div>
+                          )}
                         </div>
                       )}
+                      
                       <div className="mt-2 pt-2 border-t border-gray-100 flex justify-between items-center">
-                        <span className="text-xs text-gray-500">Last updated: {new Date().toLocaleDateString()}</span>
-                        <button className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-                          View Details
+                        <button 
+                          onClick={() => toggleProductExpand(p.id)}
+                          className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center"
+                        >
+                          {expandedProduct === p.id ? (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                              </svg>
+                              Less Details
+                            </>
+                          ) : (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                              More Details
+                            </>
+                          )}
                         </button>
+                        <span className="text-xs text-gray-500">ID: {p.id}</span>
                       </div>
                     </div>
                   ))}
@@ -603,14 +708,16 @@ const App = () => {
           </div>
         )}
       </div>
-      
+         )}
       {/* Footer */}
-      <footer className="mt-8 md:mt-12 text-center text-gray-500 text-xs md:text-sm pb-4 md:pb-6">
-        <p>© {new Date().getFullYear()} ShelfSense - Find products faster</p>
-      </footer>
+      {!showSplash && (
+        <footer className="mt-8 md:mt-12 text-center text-gray-500 text-xs md:text-sm pb-4 md:pb-6">
+          <p>© {new Date().getFullYear()} ShelfSense - Find products faster</p>
+        </footer>
+      )}
 
-      {/* Add some global styles for animations */}
-      <style jsx global>{`
+  {/* Add global styles for animations */}
+  <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
@@ -624,6 +731,23 @@ const App = () => {
         }
         .animate-pulse {
           animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes splashFadeOut {
+          0% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { opacity: 0; visibility: hidden; }
+        }
+        .animate-splashFadeOut {
+          animation: splashFadeOut 3s ease-in-out forwards;
+        }
+        @keyframes splashSlideUp {
+          0% { transform: translateY(20px); opacity: 0; }
+          30% { transform: translateY(0); opacity: 1; }
+          70% { transform: translateY(0); opacity: 1; }
+          100% { transform: translateY(-20px); opacity: 0; }
+        }
+        .animate-splashSlideUp {
+          animation: splashSlideUp 3s ease-in-out forwards;
         }
       `}</style>
     </div>
